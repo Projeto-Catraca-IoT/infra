@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: viniciuscassemiro/smart-gate-api:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_URL
+              value: "mysql://user:pass123@mysql:3306/smart_gate"
+            - name: JWT_SECRET
+              value: "seu_jwt_secret"
+            - name: FRONTEND_URL
+              value: "http://localhost:5173"
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              npx prisma generate
+              npx prisma migrate deploy
+              pnpm run dev
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30000
+  selector:
+    app: api

@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8
+    container_name: smart-gate-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - smart_gate_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  api:
+    image: viniciuscassemira/smart-gate-api:latest
+    container_name: smart-gate-api
+    restart: always
+    ports:
+      - "3000:3000"
+    command: sh -c "npx prisma migrate deploy && npm run dev"      
+    environment:
+      - DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+    networks:
+      - smart_gate_network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: viniciuscassemira/smart-gate-web:latest
+    container_name: smart-gate-web
+    restart: always
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+    networks:
+      - smart_gate_network
+    depends_on:
+      - api
+
+networks:
+  smart_gate_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
