@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: viniciuscassemiro/smart-gate-web:latest
+          image: viniciuscassemira/smart-gate-web:latest
           ports:
             - containerPort: 80
           env:
