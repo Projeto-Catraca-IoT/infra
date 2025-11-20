@@ -29,7 +29,7 @@ spec:
             - |
               npx prisma generate
               npx prisma migrate deploy
-              pnpm run dev
+              npm run dev
 
 ---
 apiVersion: v1
